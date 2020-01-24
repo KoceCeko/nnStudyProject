@@ -212,9 +212,17 @@ class CallBack(keras.callbacks.Callback):
                 self.model.save('final/model_MIN_LOSS_RATIO.h5')
 
 
-        # if batch > 4000:
-        #     self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
+        if batch = 200:
+            self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
             
+        if batch = 500:
+            self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
+
+        if batch = 100:
+            print('CURRENT LR -> ',self.opt.learning_rate)
+            self.opt.learning_rate = self.opt.learning_rate/10
+        if batch = 101:
+            print('new LR -> ',self.opt.learning_rate)
         # if batch > 7000:
         #     self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
         return
@@ -238,7 +246,7 @@ def train_model(in_v,out,in_test,out_test):
     # print('output ',np.matrix(out))
     
     sgd = keras.optimizers.SGD()
-    adx = keras.optimizers.Adamax()
+    adx = keras.optimizers.Adamax(learning_rate=0.002)
     # current best for adamax
     model.compile(loss='mean_squared_error', optimizer=adx, metrics=['accuracy'])
     

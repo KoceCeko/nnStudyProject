@@ -105,17 +105,17 @@ ev_range,ev_enemy = prepare_eval_data()
 print(curve([700,0.485398,320]))
 
 err = 0
-# model = load_model('model_CURRENT_BEST.h5')         #   3.4%
-# for val1 in ev_range :
-#     for val2 in ev_enemy:
-#         predictions = model.predict(np.matrix([val1,val2]))
-#         if not evaluate_data(predictions[0][1],predictions[0][0],val1,val2):
-#              # print('error -> ',val1,val2)
-#             err = err + 1
-# print('error ->',err/(len(ev_range)*len(ev_enemy)))
-# tmp = err/(len(ev_range)*len(ev_enemy))
+model = load_model('model_CURRENT_BEST.h5')         #   3.4%
+for val1 in ev_range :
+    for val2 in ev_enemy:
+        predictions = model.predict(np.matrix([val1,val2]))
+        if not evaluate_data(predictions[0][1],predictions[0][0],val1,val2):
+             # print('error -> ',val1,val2)
+            err = err + 1
+print('error ->',err/(len(ev_range)*len(ev_enemy)))
+tmp = err/(len(ev_range)*len(ev_enemy))
 
-best = 0.4
+best = tmp
 print('CURRENT BEST ->',best)
 err = 0
 session = 1
@@ -127,7 +127,7 @@ while True:
     models.append(load_model('final/model_MIN_LOSS.h5'))        #   5.6%
     models.append(load_model('final/model_MIN_VAL_LOSS.h5'))    #   4.3%
     models.append(load_model('final/model_MIN_LOSS_RATIO.h5'))  #   3.4%
-    models.append(load_model('final/model_50.h5'))              #   3.7%
+    # models.append(load_model('final/model_50.h5'))              #   3.7%
     # models.append(load_model('model_MIN_LOSS1.h5'))           #   4.3%
     # models.append(load_model('model3.h5'))                    #   8.2%
 
