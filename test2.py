@@ -23,14 +23,14 @@ def get_min_angle(enemy_distance):
 
 
 def curve(v):
-    y = v[0]*math.tan(v[1]) - (9.806/2) * (v[0]**2/(v[2]**2)*math.cos(v[1])**2)
+    y = v[0]*math.tan(v[1]) - (980.6/2) * (v[0]**2/(v[2]**2)*math.cos(v[1])**2)
     return y
 
 def get_best_velocity(distance,min_alfa):
     min_v = 0.1
     zero_val = curve([distance,min_alfa,min_v])
     fit = abs( 55.0 - zero_val)
-    for v in range(1,500):
+    for v in range(500,3000):
         tmp_val = curve([distance,min_alfa,v])
         tmp_fit = abs(55.0 -  tmp_val)
         if tmp_fit < fit:
@@ -142,6 +142,7 @@ def prepare_eval_out(values):
         vel = get_best_velocity(pair[0],angle+0.1)
         temp.append([vel,angle])
     return temp
+    
 def load_model(path):
     return tf.keras.models.load_model(path)
 

@@ -11,6 +11,9 @@ import datetime
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
+TRAINING_SIZE = 20000
+NUMBER_OF_EPOCHS = 10000
+BATCH_SIZE = 64
 
 # ulazi: distanca od kosa 'x', distanca protivnika 'p'
 # izlaz: brzina izbacaja 'v', ugao izbacaja 'alfa' 
@@ -34,7 +37,7 @@ def get_best_velocity(distance,min_alfa):
     min_v = 0.1
     zero_val = curve([distance,min_alfa,min_v])
     fit = abs( 55.0 - zero_val)
-    for v in range(1,500):
+    for v in range(500,3000):
         tmp_val = curve([distance,min_alfa,v])
         tmp_fit = abs(55.0 -  tmp_val)
         if tmp_fit < fit:
@@ -91,7 +94,7 @@ def prepare_data():
     in_values = []
     result = []
 
-    for i in range(0,10000):
+    for i in range(0,TRAINING_SIZE):
         robot_distance = random.random() * 1300.0 + 600.0
         enemy_distance = random.random() * 240+ 80
 
@@ -202,18 +205,18 @@ class CallBack(keras.callbacks.Callback):
                 self.model.save('final/model_MIN_LOSS.h5')
 
         if self.min_loss_ratio > logs.get('loss')*logs.get('val_loss'):
-            print(' NEW MIN LOSS ->',logs.get('loss')*logs.get('val_loss'))
+            print(' NEW MIN LOSS RATIO->',logs.get('loss')*logs.get('val_loss'))
             self.min_loss_ratio=logs.get('loss')*logs.get('val_loss')
 
             if batch > 100:
                 self.model.save('final/model_MIN_LOSS_RATIO.h5')
 
 
-        if batch > 4000:
-            self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
+        # if batch > 4000:
+        #     self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
             
-        if batch > 7000:
-            self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
+        # if batch > 7000:
+        #     self.opt.learning_rate = self.opt.learning_rate - self.opt.learning_rate/2
         return
 
 
@@ -228,23 +231,22 @@ def train_model(in_v,out,in_test,out_test):
     
     model.add(Dense(64,input_shape=(2,),activation='relu'))
     model.add(Dense(256,activation='sigmoid'))
+    # model.add(Dense(256,activation='relu'))
     model.add(Dense(2,activation='linear'))
 
     # print('input ',np.matrix(in_v))
     # print('output ',np.matrix(out))
     
-    sgd = keras.optimizers.SGD(learning_rate=0.01,momentum=0.01)
-    a1 = keras.optimizers.Adamax()
+    sgd = keras.optimizers.SGD()
+    adx = keras.optimizers.Adamax()
     # current best for adamax
-    # sgd stucks on loss: ~300
-    # adam stucks on loss: ~300
-    model.compile(loss='mean_squared_error', optimizer=a1, metrics=['accuracy'])
+    model.compile(loss='mean_squared_error', optimizer=adx, metrics=['accuracy'])
     
     #model.optimizer.learning_rate = 0.01
-    history = model.fit(x=np.matrix(in_v),y=np.matrix(out),epochs=10000,batch_size=64,validation_data=[np.matrix(in_test),np.matrix(out_test)],callbacks=[CallBack(model,a1),tensorboard_callback],use_multiprocessing=True)
+    history = model.fit(x=np.matrix(in_v),y=np.matrix(out),epochs=NUMBER_OF_EPOCHS,batch_size=BATCH_SIZE,validation_data=[np.matrix(in_test),np.matrix(out_test)],callbacks=[CallBack(model,adx)],use_multiprocessing=True)
     print(history)
 
-    model.evaluate()
+    # model.evaluate()
     return model
 
 in_v,out,in_test,out_test = load_data()
@@ -266,7 +268,7 @@ print('diference: ',test_distance-distance)
 #if abs(test_distance - distance) < 46:
 model.save('model3.h5')
 
-angle = get_min_angle(150)
+angle = get_min_angle(300)
 
 v = get_best_velocity(test_distance,angle)
 

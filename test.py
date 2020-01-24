@@ -26,7 +26,7 @@ def get_best_velocity(distance,min_alfa):
     min_v = 0.1
     zero_val = curve([distance,min_alfa,min_v])
     fit = abs( 55.0 - zero_val)
-    for v in range(1,500):
+    for v in range(500,3000):
         tmp_val = curve([distance,min_alfa,v])
         tmp_fit = abs(55.0 -  tmp_val)
         if tmp_fit < fit:
@@ -105,21 +105,21 @@ ev_range,ev_enemy = prepare_eval_data()
 print(curve([700,0.485398,320]))
 
 err = 0
-model = load_model('model_CURRENT_BEST.h5')         #   3.4%
-for val1 in ev_range :
-    for val2 in ev_enemy:
-        predictions = model.predict(np.matrix([val1,val2]))
-        if not evaluate_data(predictions[0][1],predictions[0][0],val1,val2):
-             # print('error -> ',val1,val2)
-            err = err + 1
-print('error % ->',err/(len(ev_range)*len(ev_enemy)))
-tmp = err/(len(ev_range)*len(ev_enemy))
+# model = load_model('model_CURRENT_BEST.h5')         #   3.4%
+# for val1 in ev_range :
+#     for val2 in ev_enemy:
+#         predictions = model.predict(np.matrix([val1,val2]))
+#         if not evaluate_data(predictions[0][1],predictions[0][0],val1,val2):
+#              # print('error -> ',val1,val2)
+#             err = err + 1
+# print('error ->',err/(len(ev_range)*len(ev_enemy)))
+# tmp = err/(len(ev_range)*len(ev_enemy))
 
-best = tmp
+best = 0.4
 print('CURRENT BEST ->',best)
 err = 0
 session = 1
-while False:
+while True:
     print('session',session)
     session=session+1
     models = []
@@ -139,7 +139,7 @@ while False:
                 if not evaluate_data(predictions[0][1],predictions[0][0],val1,val2):
                     # print('error -> ',val1,val2)
                     err = err + 1
-        print('error % ->',err/(len(ev_range)*len(ev_enemy)))
+        print('error ->',err/(len(ev_range)*len(ev_enemy)))
         tmp = err/(len(ev_range)*len(ev_enemy))
         if tmp < best:
             best = tmp
