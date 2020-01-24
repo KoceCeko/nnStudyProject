@@ -6,7 +6,6 @@ import random
 import numpy as np
 import os
 import tensorflow as tf
-from joblib import Parallel
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
@@ -20,7 +19,7 @@ def get_min_angle(enemy_distance):
 
 
 def curve(v):
-    y = v[0]*math.tan(v[1]) - (9.806/2) * (v[0]**2/(v[2]**2)*math.cos(v[1])**2)
+    y = v[0]*math.tan(v[1]) - (980.6/2) * (v[0]**2/(v[2]**2)*math.cos(v[1])**2)
     return y
 
 def get_best_velocity(distance,min_alfa):
@@ -73,7 +72,7 @@ def evaluate_data(angle,velocity,player_distance,enemy_distance):
     if angle < get_min_angle(enemy_distance):
         # print('angle error')
         return False
-    if abs(distance-best_dist) > 45:
+    if abs(distance-best_dist) > 45.72/2 - 12:
         # print('distance error ->',abs(distance - best_dist))
         return False
     return True
@@ -103,6 +102,8 @@ def load_model(path):
 
 ev_range,ev_enemy = prepare_eval_data()
 
+print(curve([700,0.485398,320]))
+
 err = 0
 model = load_model('model_CURRENT_BEST.h5')         #   3.4%
 for val1 in ev_range :
@@ -118,7 +119,7 @@ best = tmp
 print('CURRENT BEST ->',best)
 err = 0
 session = 1
-while True:
+while False:
     print('session',session)
     session=session+1
     models = []

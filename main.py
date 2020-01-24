@@ -6,6 +6,7 @@ import random
 import numpy as np
 import os
 import tensorflow as tf
+import datetime
 
 print("Num GPUs Available: ", len(tf.config.experimental.list_physical_devices('GPU')))
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -20,13 +21,13 @@ print('start')
 #v[0] = x, v[1] = alfa, v[2] = velocity
 
 def get_min_angle(enemy_distance):
-    r = math.sqrt(enemy_distance**2+40**2)
+    r = math.sqrt(enemy_distance**2+52**2)
     alfa = math.asin(40.0/r)
     return alfa
 
 
 def curve(v):
-    y = v[0]*math.tan(v[1]) - (9.806/2) * (v[0]**2/(v[2]**2)*math.cos(v[1])**2)
+    y = v[0]*math.tan(v[1]) - (980.6/2) * (v[0]**2/(v[2]**2)*math.cos(v[1])**2)
     return y
 
 def get_best_velocity(distance,min_alfa):
@@ -51,9 +52,7 @@ def get_best_velocity(distance,min_alfa):
 
     return tmp_min_v
 
-
 def find_distance(angle, velocity):
-    print('=========')
     min_d = 0.1
     zero_val = curve([min_d,angle,velocity])
     fit = abs( 55.0 - zero_val)
@@ -84,7 +83,9 @@ def load_data():
         test_out = np.loadtxt('output_values_test')
         return in_v,out_v,test_in,test_out
     else:
-        return [prepare_data(),prepare_test_data()]
+        in_v,out_v = prepare_data()
+        test_in,test_out = prepare_test_data() 
+        return in_v,out_v,test_in,test_out
 
 def prepare_data():
     in_values = []
@@ -92,7 +93,7 @@ def prepare_data():
 
     for i in range(0,10000):
         robot_distance = random.random() * 1300.0 + 600.0
-        enemy_distance = random.random() * 280+ 80
+        enemy_distance = random.random() * 240+ 80
 
         min_alfa = get_min_angle(enemy_distance) + 0.1
         
@@ -112,7 +113,7 @@ def prepare_test_data():
     in_values = []
     result = []
 
-    for i in range(0,1200):
+    for i in range(0,2000):
         robot_distance = random.random() * 1125.0 + 675.0
         enemy_distance = random.random() * 200 + 100
 
@@ -221,6 +222,9 @@ def train_model(in_v,out,in_test,out_test):
 
     model = Sequential()
     # keras.activations.sigmoid
+
+    log_dir="logs/fit/" + datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir, histogram_freq=1)
     
     model.add(Dense(64,input_shape=(2,),activation='relu'))
     model.add(Dense(256,activation='sigmoid'))
@@ -237,7 +241,7 @@ def train_model(in_v,out,in_test,out_test):
     model.compile(loss='mean_squared_error', optimizer=a1, metrics=['accuracy'])
     
     #model.optimizer.learning_rate = 0.01
-    history = model.fit(x=np.matrix(in_v),y=np.matrix(out),epochs=10000,batch_size=64,validation_data=[np.matrix(in_test),np.matrix(out_test)],callbacks=[CallBack(model,a1)],use_multiprocessing=True)
+    history = model.fit(x=np.matrix(in_v),y=np.matrix(out),epochs=10000,batch_size=64,validation_data=[np.matrix(in_test),np.matrix(out_test)],callbacks=[CallBack(model,a1),tensorboard_callback],use_multiprocessing=True)
     print(history)
 
     model.evaluate()

@@ -152,6 +152,5 @@ model_eval_out = prepare_eval_out(model_eval)
 err = 0
 model = load_model('model_CURRENT_BEST.h5')         #   3.4%
 # keras.metrics.
-model = Sequential()
 # model.metrics.
 model.evaluate(x=np.matrix(model_eval),y=np.matrix(model_eval_out))

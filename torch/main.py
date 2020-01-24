@@ -4,7 +4,10 @@ import random
 import os
 import math
 import tensorflow.core
-print(torch.cuda.is_available())
+import torch.nn as nn
+import torch.optim as optim
+
+print('CUDA CORES: ',torch.cuda.is_available())
 
 def load_data():
     print('loading data')
@@ -97,22 +100,90 @@ def get_best_velocity(distance,min_alfa):
     return tmp_min_v
 
 
-in_d,out_d,in_test,out_test = load_data()
+def prepare_eval_data():
+    ev_in_range = [675,1800]
+    ev_in_enemy = [300]
+    for i in range (7,18):
+        ev_in_range.append(i*100)
+        ev_in_range.append(i*100+25)
+        ev_in_range.append(i*100+50)
+        ev_in_range.append(i*100+75)
 
-print(in_d,out_d)
+    
+    for i in range (1,2):
+        ev_in_enemy.append(i*100)
+        ev_in_enemy.append(i*100+25)
+        ev_in_enemy.append(i*100+50)
+        ev_in_enemy.append(i*100+75)
 
+    return ev_in_range,ev_in_enemy
 
 # input_tensor = torch.tensor(in_d)
 # out_tensor = torch.tensor(out_d)
 
-class Net(torch.nn.Module):
+class Net(nn.Module):
     def __init__(self):
+        super(Net, self).__init__()
         self.hidden = torch.nn.Linear(2,64)
-        self.hiddenTwo = torch.nn.Sigmoid()
-        self.output = torch.nn.Linear(64,2)
+        self.hidden2 = torch.nn.ReLU()
+        self.hidden3 = torch.nn.Linear(64,256)
+        self.sig = torch.nn.Sigmoid()
+        self.output = torch.nn.Linear(256,2)
 
     def forward(self, x):
         x = self.hidden(x)
-        x = self.sig
+        x = self.hidden2(x)
+        x = self.hidden3(x)
+        x = self.sig(x)
+        x = self.output(x)
 
         return x
+
+
+
+in_d,out_d,in_test,out_test = load_data()
+net = Net()
+
+crit = nn.MSELoss()
+# opt = optim.SGD(params=net.parameters(),lr= 0.01)
+opt = optim.Adamax(params = net.parameters(),lr=0.002,betas=(0.9,0.999))
+
+
+for epoch in range(100):
+    loss_value = 0.0
+    
+    i = 0
+
+    for values in in_d:
+
+        opt.zero_grad()
+
+        temp = np.matrix(values)
+        tensorIn = torch.from_numpy(temp).float()
+        outs = net(tensorIn)
+        tensorOut = torch.from_numpy(out_d[i]).float()
+        loss = crit(outs,tensorOut)
+        i = i+1
+
+        loss.backward()
+
+        opt.step()
+
+        loss_value += loss.item()
+
+        if i%2000 == 1999 :
+            print('[%d, %5d] loss: %.3f' % (epoch + 1, i + 1, loss_value / 2000))
+            loss_value = 0.0
+
+
+data = prepare_eval_data()
+
+for v1 in data[0]:
+    for v2 in data[1]:
+        temp = torch.from_numpy(np.matrix([v1,v2])).float()
+
+        out = net(temp)
+
+        print('in values -> ',v1,v2,' out values -> ',out[0])
+
+print('FINISHED')
